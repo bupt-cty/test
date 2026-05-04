@@ -122,8 +122,13 @@ if __name__ == "__main__":
                        'bid_price1', 'bid_volume1', 'ask_price1', 'ask_volume1']].copy()
     
     # 强制将 datetime 列转换为 pandas  datetime 格式（方便后续时间判断）
-    df_clean['datetime'] = pd.to_datetime(df_clean['datetime'])
-    
+    # 修复代码：转换为 Pandas datetime 后，加上 8 小时修正为北京时间
+    # 同时，安全处理 TqSdk 有时返回的 NaN 空值（高频清洗底线）
+    df_clean['datetime'] = pd.to_datetime(df_clean['datetime']) + pd.Timedelta(hours=8)
+
+    # 建议加一行：剔除掉还没有产生有效盘口就被交易所推送出来的空数据
+    df_clean = df_clean.dropna(subset=['bid_price1', 'ask_price1'])
+        
     print("原始数据提取完毕，准备进入清洗管道...")
     
     # -------------------------------------------------------------------------
